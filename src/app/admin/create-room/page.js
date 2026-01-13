@@ -11,7 +11,17 @@ import { ArrowLeft } from "lucide-react";
 export default function CreateRoomPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
-    const { register, handleSubmit, formState: { errors } } = useForm();
+    const { register, handleSubmit, watch, formState: { errors } } = useForm({
+        defaultValues: {
+            wifi: false,
+            hdmi: false,
+            micCam: false,
+            whiteboard: false,
+            hasDisplay: false,
+            displayCount: 0
+        }
+    });
+    const hasDisplay = watch("hasDisplay");
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -26,6 +36,7 @@ export default function CreateRoomPage() {
             await createRoom({
                 ...data,
                 capacity: parseInt(data.capacity),
+                displayCount: data.hasDisplay ? parseInt(data.displayCount || 0) : 0,
                 createdBy: user.uid,
             });
             router.push("/admin");
@@ -83,6 +94,71 @@ export default function CreateRoomPage() {
                                     placeholder="e.g. Floor 2, East Wing"
                                 />
                                 {errors.location && <p className="text-red-400 text-sm mt-1">{errors.location.message}</p>}
+                            </div>
+                        </div>
+
+                        {/* Amenities Section */}
+                        <div className="bg-gray-700/50 rounded-lg p-6 border border-gray-600">
+                            <h3 className="text-lg font-semibold text-white mb-4">Amenities</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* WiFi Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-gray-300">High-Speed WiFi Access</label>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" {...register("wifi")} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* HDMI Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-gray-300">HDMI Cables</label>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" {...register("hdmi")} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* Mic/Cam Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-gray-300">Microphones & Cameras</label>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" {...register("micCam")} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {/* Whiteboard Toggle */}
+                                <div className="flex items-center justify-between">
+                                    <label className="text-gray-300">Whiteboard</label>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" {...register("whiteboard")} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* TV/Monitor Section */}
+                            <div className="mt-6 pt-6 border-t border-gray-600">
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="text-gray-300 font-medium">TVs / Monitors Available</label>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" {...register("hasDisplay")} className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                    </label>
+                                </div>
+
+                                {hasDisplay && (
+                                    <div className="animate-fadeIn">
+                                        <label className="block text-sm font-medium text-gray-400 mb-2">Number of Screens</label>
+                                        <input
+                                            {...register("displayCount", { min: 1 })}
+                                            type="number"
+                                            className="w-full bg-gray-900 border border-gray-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+                                            placeholder="How many screens?"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
 

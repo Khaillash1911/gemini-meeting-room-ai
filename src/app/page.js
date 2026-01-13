@@ -47,7 +47,7 @@ export default function Home() {
       </main>
 
       <footer className="row-start-3 text-gray-500 text-sm">
-        Milestone 2 • Core Booking System
+        Control your rooms • With a click
       </footer>
     </div>
   );
