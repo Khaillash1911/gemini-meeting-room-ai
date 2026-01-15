@@ -3,15 +3,16 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { createRoom } from "@/lib/db";
-import { useState, useEffect } from "react";
+import { getRoom, updateRoom } from "@/lib/db";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default function CreateRoomPage() {
+export default function EditRoomPage({ params }) {
+    const { id: roomId } = use(params);
     const { user, loading } = useAuth();
     const router = useRouter();
-    const { register, handleSubmit, watch, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
         defaultValues: {
             wifi: false,
             hdmi: false,
@@ -24,12 +25,34 @@ export default function CreateRoomPage() {
     const hasDisplay = watch("hasDisplay");
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
+    const [fetching, setFetching] = useState(true);
 
     useEffect(() => {
         if (!loading && !user) {
             router.push("/login");
         }
     }, [user, loading, router]);
+
+    useEffect(() => {
+        async function fetchRoomData() {
+            try {
+                const roomData = await getRoom(roomId);
+                if (roomData) {
+                    reset(roomData);
+                } else {
+                    setError("Room not found");
+                }
+            } catch (err) {
+                console.error("Error fetching room:", err);
+                setError("Failed to fetch room details");
+            } finally {
+                setFetching(false);
+            }
+        }
+        if (user) {
+            fetchRoomData();
+        }
+    }, [user, roomId, reset]);
 
     const onSubmit = async (data) => {
         setSubmitting(true);
@@ -41,16 +64,17 @@ export default function CreateRoomPage() {
             if (isNaN(capacity)) throw new Error("Invalid capacity");
             if (isNaN(displayCount)) throw new Error("Invalid display count");
 
-            await createRoom({
+            await updateRoom(roomId, {
                 ...data,
                 capacity,
                 displayCount,
-                createdBy: user.uid,
+                updatedBy: user.uid,
+                updatedAt: new Date(), // This will be serverTimestamp in db but good to have local
             });
             router.push("/admin");
         } catch (error) {
-            console.error("Error creating room:", error);
-            setError(error.message || "Failed to create room. Please try again.");
+            console.error("Error updating room:", error);
+            setError(error.message || "Failed to update room. Please try again.");
         } finally {
             setSubmitting(false);
         }
@@ -58,6 +82,8 @@ export default function CreateRoomPage() {
 
     if (loading || (!user && loading)) return <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>;
     if (!user) return null;
+
+    if (fetching) return <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading Room Details...</div>;
 
     return (
         <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -67,7 +93,7 @@ export default function CreateRoomPage() {
                 </Link>
 
                 <h1 className="text-3xl font-bold mb-8 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                    Create New Room
+                    Edit Room
                 </h1>
 
                 <div className="bg-gray-800 rounded-xl p-8 border border-gray-700 shadow-xl">
@@ -180,7 +206,7 @@ export default function CreateRoomPage() {
                             disabled={submitting}
                             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold py-4 rounded-lg transition-all transform hover:scale-[1.01] active:scale-95 disabled:opacity-50"
                         >
-                            {submitting ? "Creating..." : "Create Room"}
+                            {submitting ? "Updating..." : "Update Room"}
                         </button>
                     </form>
                 </div>

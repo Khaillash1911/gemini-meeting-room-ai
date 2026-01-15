@@ -9,6 +9,8 @@ import {
     where,
     orderBy,
     serverTimestamp,
+    deleteDoc,
+    updateDoc,
 } from "firebase/firestore";
 
 // Rooms
@@ -21,6 +23,25 @@ export async function createRoom(roomData) {
         return { id: docRef.id, ...roomData };
     } catch (error) {
         console.error("Error adding room: ", error);
+        throw error;
+    }
+}
+
+export async function updateRoom(roomId, roomData) {
+    try {
+        const docRef = doc(db, "rooms", roomId);
+        await updateDoc(docRef, roomData);
+    } catch (error) {
+        console.error("Error updating room: ", error);
+        throw error;
+    }
+}
+
+export async function deleteRoom(roomId) {
+    try {
+        await deleteDoc(doc(db, "rooms", roomId));
+    } catch (error) {
+        console.error("Error deleting room: ", error);
         throw error;
     }
 }
