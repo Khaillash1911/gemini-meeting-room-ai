@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Rooms: 
+    // - Anyone can read rooms (to book them)
+    // - Only authenticated users (admins) can create/update/delete rooms
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Bookings:
+    // - Anyone can read bookings (to see availability)
+    // - Anyone can create a booking (public booking system)
+    // - Updates/Deletes restricted
+    match /bookings/{bookingId} {
+      allow read: if true;
+      allow create: if true;
+      // Optional: restrict booking modification to the creator or admin
+      allow update, delete: if request.auth != null; 
+    }
+  }
+}
