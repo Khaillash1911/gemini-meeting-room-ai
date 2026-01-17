@@ -1,54 +1,66 @@
 "use client";
+
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { Shield, User } from "lucide-react";
 
-export default function Home() {
-  const { user, loading } = useAuth();
-
+export default function LoginPage() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-gray-950 text-white">
-      <main className="flex flex-col gap-8 row-start-2 items-center text-center max-w-2xl">
-        <div className="relative">
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-40 animate-pulse"></div>
-          <h1 className="relative text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-            Meeting Room AI
-          </h1>
-        </div>
+    <div className="min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
+      <div className="w-full max-w-3xl">
+        <header className="mb-10 text-center">
+          <p className="text-xs uppercase tracking-[0.35em] text-gray-500">Role</p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">Choose your dashboard</h1>
+          <p className="text-gray-400 mt-2">
+            No login needed. Pick how you want to use the app.
+          </p>
+        </header>
 
-        <p className="text-xl text-gray-400">
-          Smart booking system for the modern workplace.
-        </p>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row mt-8">
-          {!loading && user ? (
-            <>
-              <Link
-                href="/admin"
-                className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-blue-600 text-white gap-2 hover:bg-blue-700 h-12 px-8 text-base font-medium shadow-lg hover:shadow-blue-500/20"
-              >
-                Admin Dashboard
-              </Link>
-              <button
-                onClick={() => import("@/lib/firebase").then(m => m.auth.signOut())}
-                className="rounded-full border border-solid border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#1a1a1a] hover:border-transparent text-white h-12 px-8 sm:min-w-44 text-base font-medium"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="rounded-2xl border border-gray-800 bg-gray-900/60 p-6 shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="rounded-xl bg-blue-500/10 p-3 text-blue-300">
+                <Shield size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">Admin</h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  Manage rooms, view QR codes, and edit inventory.
+                </p>
+              </div>
+            </div>
             <Link
-              href="/login"
-              className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-white text-black gap-2 hover:bg-[#f2f2f2] h-12 px-8 text-base font-medium shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              href="/admin"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500"
             >
-              Get Started
+              Enter Admin Dashboard
             </Link>
-          )}
-        </div>
-      </main>
+          </div>
 
-      <footer className="row-start-3 text-gray-500 text-sm">
-        Control your rooms • With a click
-      </footer>
+          <div className="rounded-2xl border border-gray-800 bg-gray-900/60 p-6 shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="rounded-xl bg-emerald-500/10 p-3 text-emerald-300">
+                <User size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold">User</h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  Browse rooms and book meeting slots quickly.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/public"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
+            >
+              Enter User Dashboard
+            </Link>
+          </div>
+        </div>
+
+        <p className="mt-8 text-center text-xs text-gray-500">
+          You can switch roles any time from the sidebar.
+        </p>
+      </div>
     </div>
   );
 }
