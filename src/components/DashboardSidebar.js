@@ -35,10 +35,11 @@ export default function DashboardSidebar({
   const renderItem = (item) => {
     const Icon = item.icon;
     const active = isActive(item.href);
+    const itemKey = item.key ?? `${item.href ?? "item"}-${item.label ?? "label"}`;
 
     return (
       <Link
-        key={item.href}
+        key={itemKey}
         href={item.href}
         onClick={() => setOpen(false)}
         className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-colors ${

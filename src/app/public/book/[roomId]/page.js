@@ -4,9 +4,10 @@ import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { getRoom, createBooking, getRoomBookings } from "@/lib/db";
-import { Calendar, Clock, ArrowLeft, MapPin, Users, Wifi, Monitor, Mic, MonitorPlay as Presentation, Cable } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, MapPin, Users, Wifi, Monitor, Mic, MonitorPlay as Presentation, Cable, Plug } from "lucide-react";
 import Link from 'next/link';
 import UserSidebar from "@/components/UserSidebar";
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export default function BookingPage({ params }) {
     const { roomId } = use(params);
@@ -81,12 +82,8 @@ export default function BookingPage({ params }) {
                     <div className="pointer-events-none absolute -top-24 right-6 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.2),transparent_70%)] blur-3xl" />
                     <div className="pointer-events-none absolute -left-16 top-10 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(4,120,87,0.2),transparent_70%)] blur-3xl" />
                     <div className="max-w-5xl mx-auto">
-                        <Link
-                            href="/public"
-                            className="inline-flex items-center gap-2 text-sm text-[var(--page-muted)] transition hover:text-[var(--page-text)]"
-                        >
-                            <ArrowLeft size={18} /> Back to dashboard
-                        </Link>
+                        <Breadcrumbs dynamicSegments={{ [roomId]: room ? room.name : "Room Details" }} />
+
 
                         {fetchingRoom ? (
                             <div className="mt-6 rounded-3xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-8 text-center text-sm text-[var(--page-muted)]">
@@ -142,6 +139,11 @@ export default function BookingPage({ params }) {
                                                         {room.hasDisplay && (
                                                             <div className="flex items-center gap-2 text-sm text-[var(--page-text)] bg-[var(--surface-muted)] p-2 rounded-2xl border border-[var(--border)]">
                                                                 <Monitor size={16} className="text-[var(--accent-cool)]" /> {room.displayCount} Screens
+                                                            </div>
+                                                        )}
+                                                        {room.plugPoints > 0 && (
+                                                            <div className="flex items-center gap-2 text-sm text-[var(--page-text)] bg-[var(--surface-muted)] p-2 rounded-2xl border border-[var(--border)]">
+                                                                <Plug size={16} className="text-[var(--accent)]" /> {room.plugPoints} Plug Points
                                                             </div>
                                                         )}
                                                     </div>

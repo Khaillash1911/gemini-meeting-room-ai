@@ -14,7 +14,7 @@ const userItems = [
   {
     label: "Booking",
     children: [
-      { href: "/public/book", label: "Book Room", icon: CalendarPlus },
+      { href: "/public/book", label: "All Rooms", icon: CalendarPlus },
       { href: "/public#remove", label: "Remove Session", icon: LogOut },
     ],
   },
@@ -41,7 +41,7 @@ export default function UserSidebar() {
             <p className="text-sm text-[var(--sidebar-text)]">User</p>
           </div>
           <Link
-            href="/login"
+            href="/"
             className="inline-flex w-full items-center justify-center rounded-lg border border-[var(--sidebar-border)] px-3 py-2 text-sm text-[var(--sidebar-text)] transition-colors hover:bg-[var(--sidebar-hover-bg)]"
           >
             Switch Role

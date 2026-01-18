@@ -6,7 +6,8 @@ import { createRoom } from "@/lib/db";
 import { useState } from "react";
 import Link from "next/link";
 import AdminSidebar from "@/components/AdminSidebar";
-import { ArrowLeft } from "lucide-react";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { ArrowLeft, Plug } from "lucide-react";
 
 export default function CreateRoomPage() {
     const router = useRouter();
@@ -56,12 +57,8 @@ export default function CreateRoomPage() {
                     <div className="pointer-events-none absolute -top-32 right-0 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.2),transparent_70%)] blur-3xl" />
                     <div className="pointer-events-none absolute -left-20 top-8 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(14,116,144,0.2),transparent_70%)] blur-3xl" />
                     <div className="max-w-3xl mx-auto">
-                        <Link
-                            href="/admin"
-                            className="inline-flex items-center gap-2 text-sm text-[var(--page-muted)] transition hover:text-[var(--page-text)]"
-                        >
-                            <ArrowLeft size={18} /> Back to Dashboard
-                        </Link>
+                        <Breadcrumbs />
+
 
                         <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
                             <div className="mb-8">
@@ -173,6 +170,21 @@ export default function CreateRoomPage() {
                                                 <input type="checkbox" {...register("whiteboard")} className="sr-only peer" />
                                                 <div className="w-11 h-6 rounded-full border border-[var(--border)] bg-[var(--surface-strong)] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[var(--ring)] peer-checked:bg-[var(--accent)] after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-full" />
                                             </label>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex items-center gap-2">
+                                                <Plug size={18} className="text-[var(--page-muted)]" />
+                                                <label className="text-sm text-[var(--page-text)]">
+                                                    Plug Points
+                                                </label>
+                                            </div>
+                                            <input
+                                                {...register("plugPoints", { min: 0 })}
+                                                type="number"
+                                                className="w-20 rounded-xl border border-[var(--border)] bg-white p-2 text-center text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)]"
+                                                placeholder="0"
+                                            />
                                         </div>
                                     </div>
 

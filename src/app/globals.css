@@ -34,33 +34,37 @@ body {
 }
 
 .dashboard-shell.admin-theme {
-  --page-bg: #f8f2e8;
+  /* Gemini Professional: Indigo, Blue, and soft Lavender */
+  background: linear-gradient(135deg, #f5f3ff 0%, #e0e7ff 100%); /* Visible Gradient */
+  --page-bg: #f5f3ff;
   --surface: #ffffff;
-  --surface-muted: #f3eadb;
-  --surface-strong: #eadcc7;
-  --accent: #0f766e;
-  --accent-strong: #0f5a52;
-  --accent-warm: #d97706;
-  --accent-cool: #0f172a;
-  --sidebar-bg: #0c1626;
-  --sidebar-active-bg: rgba(14, 116, 144, 0.2);
-  --sidebar-active-text: #a5f3fc;
-  --sidebar-active-border: rgba(14, 116, 144, 0.45);
+  --surface-muted: #ede9fe;
+  --surface-strong: #ddd6fe;
+  --accent: #6366f1;
+  --accent-strong: #4338ca;
+  --accent-warm: #d946ef;
+  --accent-cool: #3b82f6;
+  --sidebar-bg: #1e1b4b;
+  --sidebar-active-bg: rgba(139, 92, 246, 0.25);
+  --sidebar-active-text: #c4b5fd;
+  --sidebar-active-border: rgba(139, 92, 246, 0.5);
 }
 
 .dashboard-shell.user-theme {
-  --page-bg: #f2f6f3;
+  /* Gemini Creative: Teal, Mint, and soft Pink */
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfccb 100%); /* Visible Gradient */
+  --page-bg: #f0fdfa;
   --surface: #ffffff;
-  --surface-muted: #eef4ef;
-  --surface-strong: #e1ece3;
-  --accent: #047857;
-  --accent-strong: #065f46;
-  --accent-warm: #c2410c;
-  --accent-cool: #0ea5e9;
-  --sidebar-bg: #0f2a2a;
-  --sidebar-active-bg: rgba(16, 185, 129, 0.2);
-  --sidebar-active-text: #a7f3d0;
-  --sidebar-active-border: rgba(16, 185, 129, 0.45);
+  --surface-muted: #f0f9ff; /* slightly bluer for contrast */
+  --surface-strong: #bae6fd;
+  --accent: #0d9488;
+  --accent-strong: #0f766e;
+  --accent-warm: #fb7185;
+  --accent-cool: #38bdf8;
+  --sidebar-bg: #042f2e;
+  --sidebar-active-bg: rgba(45, 212, 191, 0.2);
+  --sidebar-active-text: #5eead4;
+  --sidebar-active-border: rgba(45, 212, 191, 0.5);
 }
 
 @keyframes fadeIn {

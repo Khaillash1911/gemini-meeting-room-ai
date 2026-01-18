@@ -5,6 +5,7 @@ import { getRooms, deleteRoom } from "@/lib/db";
 import Link from "next/link";
 import RoomQRCode from "@/components/RoomQRCode";
 import AdminSidebar from "@/components/AdminSidebar";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import {
   Activity,
   BarChart3,
@@ -20,6 +21,7 @@ import {
   Trash2,
   Users,
   Wand2,
+  Plug,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -182,12 +184,13 @@ export default function AdminDashboard() {
     ];
 
     return (
-        <div className="dashboard-shell admin-theme min-h-screen bg-[var(--page-bg)] text-[var(--page-text)]">
+        <div className="dashboard-shell admin-theme min-h-screen text-[var(--page-text)]">
             <AdminSidebar />
             <main className="lg:pl-72 pt-16 lg:pt-0">
                 <div className="relative p-6 overflow-hidden">
-                    <div className="pointer-events-none absolute -top-36 right-0 h-80 w-80 rounded-full bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.35),transparent_70%)] blur-3xl" />
-                    <div className="pointer-events-none absolute -left-20 top-10 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(14,116,144,0.25),transparent_70%)] blur-3xl" />
+                    <Breadcrumbs />
+                    <div className="pointer-events-none absolute -top-36 right-0 h-80 w-80 rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.35),transparent_70%)] blur-3xl" />
+                    <div className="pointer-events-none absolute -left-20 top-10 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),transparent_70%)] blur-3xl" />
                     <div className="max-w-6xl mx-auto">
                         <section className="animate-fadeIn">
                             <div className="flex flex-wrap items-center justify-between gap-6">
@@ -214,7 +217,7 @@ export default function AdminDashboard() {
                             <div className="mt-10 flex justify-center">
                                 <div className="w-full max-w-3xl">
                                     <div className="relative">
-                                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(15,118,110,0.2),transparent_70%)] blur-xl" />
+                                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.2),transparent_70%)] blur-xl" />
                                         <div className="relative flex flex-wrap items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-lg">
                                             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface-strong)] text-[var(--accent)]">
                                                 <Sparkles size={18} />
@@ -428,127 +431,6 @@ export default function AdminDashboard() {
                             </div>
                         </section>
 
-                        <section
-                            id="rooms"
-                            className="mt-12 animate-fadeIn"
-                            style={{ animationDelay: "200ms" }}
-                        >
-                            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                                <div>
-                                    <p className="text-xs uppercase tracking-[0.25em] text-[var(--page-muted)]">
-                                        Rooms
-                                    </p>
-                                    <h2 className="mt-2 text-2xl font-semibold">Room inventory</h2>
-                                </div>
-                                <Link
-                                    href="/admin/create-room"
-                                    className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[var(--accent-strong)]"
-                                    id="create-room"
-                                >
-                                    <Plus size={14} /> Add Room
-                                </Link>
-                            </div>
-
-                        {fetching ? (
-                            <div className="text-center py-16 text-[var(--page-muted)]">
-                                Loading rooms...
-                            </div>
-                        ) : rooms.length === 0 ? (
-                            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center">
-                                <p className="text-lg font-semibold">No rooms found</p>
-                                <p className="mt-2 text-sm text-[var(--page-muted)]">
-                                    Create your first room to unlock analytics.
-                                </p>
-                                <Link
-                                    href="/admin/create-room"
-                                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-xs font-semibold"
-                                >
-                                    <Plus size={14} /> Create Room
-                                </Link>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                {rooms.map((room) => (
-                                    <div
-                                        key={room.id}
-                                        className="group rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
-                                    >
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div>
-                                                <h3 className="text-lg font-semibold">{room.name}</h3>
-                                                <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-[var(--page-muted)]">
-                                                    <span className="flex items-center gap-1">
-                                                        <MapPin size={14} /> {room.location}
-                                                    </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Users size={14} /> {room.capacity}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex gap-2">
-                                                <Link
-                                                    href={`/admin/edit-room/${room.id}`}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white text-[var(--page-text)] transition hover:-translate-y-0.5"
-                                                >
-                                                    <Edit size={16} />
-                                                </Link>
-                                                <button
-                                                    onClick={() => initiateDelete(room)}
-                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:-translate-y-0.5"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-4 inline-flex items-center gap-2 text-xs text-[var(--page-muted)]">
-                                            <span className="flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1">
-                                                <Info size={12} /> Amenities
-                                            </span>
-                                            <div className="flex flex-wrap gap-2 text-[11px] text-[var(--page-muted)]">
-                                                {room.wifi && <span>WiFi</span>}
-                                                {room.hdmi && <span>HDMI</span>}
-                                                {room.micCam && <span>Mic + Cam</span>}
-                                                {room.whiteboard && <span>Whiteboard</span>}
-                                                {room.hasDisplay && (
-                                                    <span>{room.displayCount} Screen(s)</span>
-                                                )}
-                                                {!room.wifi &&
-                                                    !room.hdmi &&
-                                                    !room.micCam &&
-                                                    !room.whiteboard &&
-                                                    !room.hasDisplay && <span>No amenities listed</span>}
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-6 flex justify-center">
-                                            <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white/60 px-6 py-4 text-center">
-                                                <RoomQRCode
-                                                    url={`${window.location.origin}/public/book/${room.id}`}
-                                                    size={120}
-                                                />
-                                                <p className="mt-2 text-xs font-mono text-[var(--page-muted)]">
-                                                    /public/book/{room.id}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4 text-xs text-[var(--page-muted)]">
-                        <Link
-                        href={`/public/book/${room.id}`}
-                        className="inline-flex items-center gap-2 font-semibold text-[var(--accent)]"
-                        >
-                                                <Calendar size={14} /> Test Booking
-                                            </Link>
-                                            <span className="inline-flex items-center gap-1">
-                                                <BarChart3 size={14} /> Analytics ready
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                        </div>
-                        )}
-                        </section>
                     </div>
 
                 {/* Delete Modal */}
