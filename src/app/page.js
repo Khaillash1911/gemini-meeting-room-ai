@@ -5,10 +5,16 @@ import { Shield, User } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-6 flex items-center justify-center">
-      <div className="w-full max-w-3xl">
+    <div className="hero-shell relative min-h-screen overflow-hidden text-white p-6 flex items-center justify-center">
+      <div className="hero-bg pointer-events-none absolute inset-0">
+        <div className="glow-layer glow-a" />
+        <div className="glow-layer glow-b" />
+        <div className="glow-layer glow-c" />
+        <div className="glow-layer glow-d" />
+      </div>
+      <div className="relative z-10 w-full max-w-3xl">
         <header className="mb-10 text-center">
-          <p className="text-xs uppercase tracking-[0.35em] text-gray-500">Role</p>
+          <p className="text-xs uppercase tracking-[0.35em] text-white-500">Role</p>
           <h1 className="text-3xl sm:text-4xl font-bold text-white">Choose your dashboard</h1>
           <p className="text-gray-400 mt-2">
             No login needed. Pick how you want to use the app.
@@ -57,10 +63,87 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <p className="mt-8 text-center text-xs text-gray-500">
+        <p className="mt-8 text-center text-xs text-white-500">
           You can switch roles any time from the sidebar.
         </p>
       </div>
+      <style jsx>{`
+        .hero-shell {
+          background: #0f172a;
+          position: relative;
+        }
+        .hero-bg {
+          position: absolute;
+          inset: 0;
+          background: 
+            radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+            radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+          overflow: hidden;
+        }
+        
+        /* Pastel Mesh Gradients */
+        .glow-layer {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.8;
+          mix-blend-mode: screen;
+          animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glow-a {
+          top: -10%;
+          left: -10%;
+          width: 50vw;
+          height: 50vw;
+          background: radial-gradient(circle, rgba(238, 174, 202, 0.8) 0%, rgba(148, 187, 233, 0) 70%); /* Pastel Pink/Blue */
+          animation-delay: -5s;
+        }
+        
+        .glow-b {
+          top: 20%;
+          right: -10%;
+          width: 60vw;
+          height: 60vw;
+          background: radial-gradient(circle, rgba(169, 222, 249, 0.8) 0%, rgba(148, 187, 233, 0) 70%); /* Pastel Blue */
+          animation-delay: -2s;
+        }
+
+        .glow-c {
+          bottom: -20%;
+          left: 20%;
+          width: 70vw;
+          height: 50vw;
+          background: radial-gradient(circle, rgba(253, 228, 207, 0.8) 0%, rgba(255, 128, 128, 0) 70%); /* Pastel Yellow/Peach */
+          animation-delay: -10s;
+        }
+
+        /* Fourth blob for extra color */
+        .glow-d {
+          bottom: 10%;
+          left: -10%;
+          width: 40vw;
+          height: 40vw;
+          background: radial-gradient(circle, rgba(212, 165, 165, 0.8) 0%, rgba(186, 230, 253, 0) 70%); /* Pastel Lavender */
+          animation-delay: -15s;
+        }
+
+        @keyframes float {
+          0% {
+            transform: translate(0, 0) rotate(0deg) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) rotate(10deg) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) rotate(-5deg) scale(0.9);
+          }
+          100% {
+            transform: translate(0, 0) rotate(0deg) scale(1);
+          }
+        }
+      `}</style>
     </div>
   );
 }

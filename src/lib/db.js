@@ -90,12 +90,17 @@ export async function getRoomBookings(roomId) {
     try {
         const q = query(
             collection(db, "bookings"),
-            where("roomId", "==", roomId),
-            orderBy("date"),
-            orderBy("time")
+            where("roomId", "==", roomId)
         );
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const bookings = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        // Sort client-side to avoid index requirements
+        return bookings.sort((a, b) => {
+             const dateA = a.date + a.time;
+             const dateB = b.date + b.time;
+             return dateA.localeCompare(dateB);
+        });
     } catch (error) {
         console.error("Error getting bookings: ", error);
         throw error;

@@ -3,12 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { getRooms } from "@/lib/db";
 import Link from "next/link";
+import RoomQRCode from "@/components/RoomQRCode";
 import UserSidebar from "@/components/UserSidebar";
+import Breadcrumbs from "@/components/Breadcrumbs";
 import {
   ArrowRight,
   Bell,
   Calendar,
   CalendarClock,
+  Info,
   LogOut,
   MapPin,
   QrCode,
@@ -93,12 +96,13 @@ export default function UserDashboard() {
   ];
 
   return (
-    <div className="dashboard-shell user-theme min-h-screen bg-[var(--page-bg)] text-[var(--page-text)]">
+    <div className="dashboard-shell user-theme min-h-screen text-[var(--page-text)]">
       <UserSidebar />
       <main className="lg:pl-72 pt-16 lg:pt-0">
         <div className="relative p-6 overflow-hidden">
-          <div className="pointer-events-none absolute -top-32 right-4 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.25),transparent_70%)] blur-3xl" />
-          <div className="pointer-events-none absolute -left-24 top-12 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,rgba(4,120,87,0.2),transparent_70%)] blur-3xl" />
+          <Breadcrumbs />
+          <div className="pointer-events-none absolute -top-32 right-4 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,rgba(251,113,133,0.3),transparent_70%)] blur-3xl" />
+          <div className="pointer-events-none absolute -left-24 top-12 h-72 w-72 rounded-full bg-[radial-gradient(circle_at_center,rgba(45,212,191,0.25),transparent_70%)] blur-3xl" />
           <div className="max-w-6xl mx-auto">
             <section id="book" className="animate-fadeIn">
               <div className="flex flex-wrap items-center justify-between gap-6">
@@ -257,6 +261,24 @@ export default function UserDashboard() {
                             <Users size={14} /> {room.capacity}
                           </span>
                         </div>
+                        
+                        <div className="group/amenity relative mt-4 inline-block">
+                          <span className="flex cursor-help items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1 text-xs text-[var(--page-muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]">
+                            <Info size={12} /> Amenities
+                          </span>
+                          <div className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-48 origin-top-left scale-95 opacity-0 transition-all duration-200 group-hover/amenity:scale-100 group-hover/amenity:opacity-100">
+                            <div className="flex flex-wrap gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-xl text-[11px] text-[var(--page-muted)]">
+                              {room.wifi && <span className="rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5">WiFi</span>}
+                              {room.hdmi && <span className="rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5">HDMI</span>}
+                              {room.micCam && <span className="rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5">Mic + Cam</span>}
+                              {room.whiteboard && <span className="rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5">Whiteboard</span>}
+                              {room.hasDisplay && (
+                                <span className="rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5">{room.displayCount} Screen(s)</span>
+                              )}
+                              {!room.wifi && !room.hdmi && !room.micCam && !room.whiteboard && !room.hasDisplay && <span>No amenities listed</span>}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <Link
                         href={`/public/book/${room.id}`}
@@ -264,6 +286,18 @@ export default function UserDashboard() {
                       >
                         <Calendar size={16} /> Book
                       </Link>
+                    </div>
+                    
+                    <div className="mt-6 flex justify-center border-t border-[var(--border)] pt-4">
+                      <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white/60 px-4 py-3 text-center">
+                        <RoomQRCode
+                          url={`${typeof window !== 'undefined' ? window.location.origin : ''}/public/book/${room.id}`}
+                          size={100}
+                        />
+                        <p className="mt-2 text-[10px] font-mono text-[var(--page-muted)]">
+                          Book via QR
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -15,19 +15,17 @@ const adminItems = [
   {
     label: "Rooms",
     children: [
+      { href: "/admin/rooms", label: "All Rooms", icon: Home },
       { href: "/admin/create-room", label: "Create Room", icon: Plus },
-      { href: "/admin#rooms", label: "Delete Room", icon: Trash2 },
     ],
   },
   {
     label: "Schedules",
     children: [
-      { href: "/admin#schedule", label: "Edit Schedule", icon: CalendarDays },
-      { href: "/admin#schedule", label: "Delete Schedule", icon: CalendarX2 },
+      { href: "/admin#schedule", label: "Manage Schedule", icon: CalendarDays },
     ],
   },
   { href: "/admin#analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/admin", label: "Home", icon: Home },
 ];
 
 export default function AdminSidebar() {
@@ -46,7 +44,7 @@ export default function AdminSidebar() {
             Gemini mode: Analytics focus
           </div>
           <Link
-            href="/login"
+            href="/"
             className="inline-flex w-full items-center justify-center rounded-lg border border-[var(--sidebar-border)] px-3 py-2 text-sm text-[var(--sidebar-text)] transition-colors hover:bg-[var(--sidebar-hover-bg)]"
           >
             Switch Role
