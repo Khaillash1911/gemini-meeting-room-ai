@@ -134,7 +134,7 @@ export default function AdminManageBookingPage({ params }) {
             setBookings(freshBookings);
         } catch (error) {
             console.error("Error deleting booking:", error);
-            alert("Failed to delete booking");
+            alert(`Failed to delete booking: ${error.message}`);
         } finally {
             setDeleting(false);
         }

@@ -108,8 +108,14 @@ export async function getRoomBookings(roomId) {
 }
 
 export async function deleteBooking(bookingId) {
+    if (!bookingId) {
+        console.error("Error: bookingId is undefined or null");
+        throw new Error("Invalid booking ID");
+    }
     try {
+        console.log("Attempting to delete booking with ID:", bookingId);
         await deleteDoc(doc(db, "bookings", bookingId));
+        console.log("Successfully deleted booking:", bookingId);
     } catch (error) {
         console.error("Error deleting booking: ", error);
         throw error;

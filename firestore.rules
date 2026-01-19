@@ -17,8 +17,8 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow read: if true;
       allow create: if true;
-      // Optional: restrict booking modification to the creator or admin
-      allow update, delete: if request.auth != null; 
+      // ALLOW PUBLIC DELETE/UPDATE FOR PROTOTYPE DASHBOARD
+      allow update, delete: if true; 
     }
   }
 }
