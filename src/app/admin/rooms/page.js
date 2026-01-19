@@ -67,7 +67,7 @@ export default function AdminRoomsPage() {
           <Breadcrumbs />
           <div className="pointer-events-none absolute -top-36 right-0 h-80 w-80 rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.35),transparent_70%)] blur-3xl" />
           <div className="pointer-events-none absolute -left-20 top-10 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),transparent_70%)] blur-3xl" />
-          
+
           <div className="max-w-6xl mx-auto relative z-10">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -76,7 +76,7 @@ export default function AdminRoomsPage() {
                 </p>
                 <h2 className="mt-2 text-3xl sm:text-4xl font-semibold">All Rooms</h2>
                 <p className="mt-2 text-[var(--page-muted)]">
-                    Manage your room inventory.
+                  Manage your room inventory.
                 </p>
               </div>
               <Link
@@ -172,7 +172,7 @@ export default function AdminRoomsPage() {
                           )}
                           {room.plugPoints > 0 && (
                             <span className="rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5 flex items-center gap-1">
-                                <Plug size={10} /> {room.plugPoints} Plugs
+                              <Plug size={10} /> {room.plugPoints} Plugs
                             </span>
                           )}
                           {!room.wifi &&
@@ -203,10 +203,10 @@ export default function AdminRoomsPage() {
 
                     <div className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4 text-xs text-[var(--page-muted)]">
                       <Link
-                        href={`/public/book/${room.id}`}
-                        className="inline-flex items-center gap-2 font-semibold text-[var(--accent)]"
+                        href={`/admin/manage-bookings/${room.id}`}
+                        className="inline-flex items-center gap-2 font-semibold text-[var(--accent)] hover:underline"
                       >
-                        <Calendar size={14} /> Test Booking
+                        <Calendar size={14} /> Manage Bookings
                       </Link>
                       <span className="inline-flex items-center gap-1">
                         <BarChart3 size={14} /> Analytics ready
@@ -281,6 +281,8 @@ export default function AdminRoomsPage() {
               </div>
             </div>
           )}
+
+
         </div>
       </main>
     </div>

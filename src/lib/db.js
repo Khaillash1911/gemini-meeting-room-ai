@@ -97,12 +97,21 @@ export async function getRoomBookings(roomId) {
 
         // Sort client-side to avoid index requirements
         return bookings.sort((a, b) => {
-             const dateA = a.date + a.time;
-             const dateB = b.date + b.time;
-             return dateA.localeCompare(dateB);
+            const dateA = a.date + a.time;
+            const dateB = b.date + b.time;
+            return dateA.localeCompare(dateB);
         });
     } catch (error) {
         console.error("Error getting bookings: ", error);
+        throw error;
+    }
+}
+
+export async function deleteBooking(bookingId) {
+    try {
+        await deleteDoc(doc(db, "bookings", bookingId));
+    } catch (error) {
+        console.error("Error deleting booking: ", error);
         throw error;
     }
 }

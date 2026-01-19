@@ -2,14 +2,12 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { getRoom, createBooking, getRoomBookings } from "@/lib/db";
-import { Calendar, Clock, ArrowLeft, MapPin, Users, Wifi, Monitor, Mic, MonitorPlay as Presentation, Cable, Plug, X, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import Link from 'next/link';
-import UserSidebar from "@/components/UserSidebar";
+import { getRoom, getRoomBookings, deleteBooking } from "@/lib/db";
+import { Calendar, Clock, MapPin, Users, Wifi, Monitor, Mic, MonitorPlay as Presentation, Cable, Plug, X, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import AdminSidebar from "@/components/AdminSidebar";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
-export default function BookingPage({ params }) {
+export default function AdminManageBookingPage({ params }) {
     const { roomId } = use(params);
     const router = useRouter();
 
@@ -32,13 +30,8 @@ export default function BookingPage({ params }) {
     const [bookings, setBookings] = useState([]);
     const [fetchingRoom, setFetchingRoom] = useState(true);
 
-    // Booking interaction state
-    const [booking, setBooking] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedSlot, setSelectedSlot] = useState(null);
-
-    // Modal form
-    const { register, handleSubmit, reset, formState: { errors } } = useForm();
+    // Interaction state
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -51,7 +44,7 @@ export default function BookingPage({ params }) {
 
                 if (!roomData) {
                     alert("Room not found");
-                    router.push("/public");
+                    router.push("/admin/rooms");
                     return;
                 }
                 setRoom(roomData);
@@ -94,7 +87,11 @@ export default function BookingPage({ params }) {
         const nextDay = String(date.getDate()).padStart(2, '0');
         const nextDateStr = `${nextYear}-${nextMonth}-${nextDay}`;
 
+        // No future constraint for admin - they can view/manage any date, or keep same constraint?
+        // User said "recreate original room booking layout". Original has constraint. I'll keep it for consistency but maybe loosen if requested.
+        // Actually, user just said "add delete option".
         if (nextDateStr < today) return;
+
         setSelectedDate(nextDateStr);
     };
 
@@ -111,11 +108,6 @@ export default function BookingPage({ params }) {
 
     // Helper to check if a slot is booked
     const getSlotStatus = (slotTime) => {
-        // Simple overlap check
-        // We need to parse times to compare ranges
-        // But for "is booked", we usually check if there is a booking that COVERS this slot.
-        // A booking at 09:00 for 60 mins covers 09:00 and 09:30.
-
         const slotMinutes = parseInt(slotTime.split(':')[0]) * 60 + parseInt(slotTime.split(':')[1]);
 
         const bookingForSlot = bookings.find(b => {
@@ -124,7 +116,6 @@ export default function BookingPage({ params }) {
             const bStart = parseInt(b.time.split(':')[0]) * 60 + parseInt(b.time.split(':')[1]);
             const bEnd = bStart + parseInt(b.duration);
 
-            // Check if slot is within [bStart, bEnd)
             return slotMinutes >= bStart && slotMinutes < bEnd;
         });
 
@@ -134,56 +125,32 @@ export default function BookingPage({ params }) {
         return { status: 'available', info: null };
     };
 
-    const handleSlotClick = (slotTime) => {
-        const { status } = getSlotStatus(slotTime);
-        if (status === 'booked') return;
-
-        setSelectedSlot(slotTime);
-        setIsModalOpen(true);
-        reset({ duration: "60" }); // Default duration
-    };
-
-    const onSubmitBooking = async (data) => {
-        if (!selectedSlot) return;
-        setBooking(true);
+    const handleDelete = async (bookingId) => {
+        if (!confirm("Are you sure you want to delete this booking?")) return;
+        setDeleting(true);
         try {
-            await createBooking({
-                roomId,
-                date: selectedDate,
-                time: selectedSlot,
-                duration: parseInt(data.duration),
-                name: data.name,
-                reason: data.reason
-            });
-
-            // Refresh bookings
+            await deleteBooking(bookingId);
             const freshBookings = await getRoomBookings(roomId);
             setBookings(freshBookings);
-
-            alert("Booking confirmed!");
-            setIsModalOpen(false);
-            reset();
-            setSelectedSlot(null);
         } catch (error) {
-            console.error("Booking error:", error);
-            alert("Failed to book room: " + error.message);
+            console.error("Error deleting booking:", error);
+            alert("Failed to delete booking");
         } finally {
-            setBooking(false);
+            setDeleting(false);
         }
     };
 
     return (
-        <div className="dashboard-shell user-theme min-h-screen bg-[var(--page-bg)] text-[var(--page-text)] relative">
-            <UserSidebar />
+        <div className="dashboard-shell admin-theme min-h-screen bg-[var(--page-bg)] text-[var(--page-text)] relative">
+            <AdminSidebar />
 
             <main className="lg:pl-72 pt-16 lg:pt-0">
                 <div className="relative p-6 overflow-hidden min-h-screen">
-                    {/* Background decorations */}
-                    <div className="pointer-events-none absolute -top-24 right-6 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(14,165,233,0.2),transparent_70%)] blur-3xl" />
-                    <div className="pointer-events-none absolute -left-16 top-10 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(4,120,87,0.2),transparent_70%)] blur-3xl" />
+                    <div className="pointer-events-none absolute -top-36 right-0 h-80 w-80 rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.35),transparent_70%)] blur-3xl" />
+                    <div className="pointer-events-none absolute -left-20 top-10 h-64 w-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),transparent_70%)] blur-3xl" />
 
                     <div className="max-w-6xl mx-auto relative z-10">
-                        <Breadcrumbs dynamicSegments={{ [roomId]: room ? room.name : "Room Details" }} />
+                        <Breadcrumbs dynamicSegments={{ [roomId]: room ? room.name : "Manage Bookings" }} />
 
                         {fetchingRoom ? (
                             <div className="mt-12 text-center py-12 rounded-3xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)]">
@@ -264,10 +231,10 @@ export default function BookingPage({ params }) {
                                             <div>
                                                 <h2 className="text-xl font-bold flex items-center gap-2">
                                                     <Clock className="text-[var(--accent)]" />
-                                                    Timetable
+                                                    Detailed Schedule
                                                 </h2>
                                                 <p className="text-sm text-[var(--page-muted)] mt-1">
-                                                    Select an empty slot to book. (Mon-Fri, 9am-5pm)
+                                                    View or delete bookings.
                                                 </p>
                                             </div>
 
@@ -276,7 +243,6 @@ export default function BookingPage({ params }) {
                                                     onClick={() => changeDate(-1)}
                                                     disabled={selectedDate <= today}
                                                     className="p-2 rounded-xl hover:bg-[var(--surface)] disabled:opacity-30 disabled:cursor-not-allowed transition-all text-[var(--accent)]"
-                                                    aria-label="Previous day"
                                                 >
                                                     <ChevronLeft size={20} />
                                                 </button>
@@ -293,7 +259,6 @@ export default function BookingPage({ params }) {
                                                 <button
                                                     onClick={() => changeDate(1)}
                                                     className="p-2 rounded-xl hover:bg-[var(--surface)] transition-all text-[var(--accent)]"
-                                                    aria-label="Next day"
                                                 >
                                                     <ChevronRight size={20} />
                                                 </button>
@@ -306,19 +271,17 @@ export default function BookingPage({ params }) {
                                                 const isBooked = status === 'booked';
 
                                                 return (
-                                                    <button
+                                                    <div
                                                         key={time}
-                                                        onClick={() => handleSlotClick(time)}
-                                                        disabled={isBooked}
                                                         className={`
-                                                            relative group flex flex-col items-start p-4 rounded-2xl border transition-all duration-200 text-left
+                                                            relative flex flex-col items-start p-4 rounded-2xl border transition-all duration-200
                                                             ${isBooked
-                                                                ? 'bg-gray-100 border-transparent opacity-60 cursor-not-allowed'
-                                                                : 'bg-[var(--surface-muted)] border-[var(--border)] hover:border-[var(--accent)] hover:shadow-md cursor-pointer active:scale-95'
+                                                                ? 'bg-purple-50 border-purple-200 shadow-sm'
+                                                                : 'bg-[var(--surface-muted)] border-[var(--border)] opacity-60'
                                                             }
                                                         `}
                                                     >
-                                                        <span className={`text-lg font-bold font-mono mb-1 ${isBooked ? 'text-gray-500' : 'text-[var(--page-text)]'}`}>
+                                                        <span className={`text-lg font-bold font-mono mb-1 ${isBooked ? 'text-purple-900' : 'text-[var(--page-muted)]'}`}>
                                                             {time}
                                                         </span>
                                                         <span className="text-xs font-medium uppercase tracking-wider text-[var(--page-muted)]">
@@ -326,17 +289,27 @@ export default function BookingPage({ params }) {
                                                         </span>
 
                                                         {isBooked && info && (
-                                                            <div className="mt-2 text-xs text-gray-500 truncate w-full">
-                                                                by {info.name || 'User'}
-                                                            </div>
-                                                        )}
+                                                            <div className="mt-2 w-full">
+                                                                <p className="text-xs font-bold text-purple-900 truncate">
+                                                                    {info.name || 'User'}
+                                                                </p>
+                                                                <p className="text-[10px] text-purple-700 truncate mb-3">
+                                                                    {info.reason}
+                                                                </p>
 
-                                                        {!isBooked && (
-                                                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--accent)]">
-                                                                <CheckCircle size={18} />
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDelete(info.id);
+                                                                    }}
+                                                                    disabled={deleting}
+                                                                    className="w-full flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-white border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 hover:border-red-300 transition-colors"
+                                                                >
+                                                                    <Trash2 size={12} /> Delete
+                                                                </button>
                                                             </div>
                                                         )}
-                                                    </button>
+                                                    </div>
                                                 );
                                             })}
                                         </div>
@@ -346,86 +319,7 @@ export default function BookingPage({ params }) {
                         )}
                     </div>
                 </div>
-
-                {/* Booking Modal */}
-                {isModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-                        <div
-                            className="bg-[var(--surface)] w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-[var(--border)]"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="p-6 border-b border-[var(--border)] flex items-center justify-between bg-[var(--surface-muted)]">
-                                <div>
-                                    <h3 className="text-lg font-bold text-[var(--page-text)]">New Booking</h3>
-                                    <p className="text-xs text-[var(--page-muted)] uppercase tracking-wide mt-1">
-                                        {selectedDate} at {selectedSlot}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="p-2 rounded-full hover:bg-black/5 text-[var(--page-text)] transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-
-                            <div className="p-6">
-                                <form onSubmit={handleSubmit(onSubmitBooking)} className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs uppercase tracking-[0.2em] text-[var(--page-muted)] mb-2 font-semibold">
-                                            Your Name
-                                        </label>
-                                        <input
-                                            {...register("name", { required: "Name is required" })}
-                                            placeholder="John Doe"
-                                            className="w-full rounded-2xl border border-[var(--border)] bg-white p-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                                        />
-                                        {errors.name && (
-                                            <p className="text-red-500 text-xs mt-1 ml-1">{errors.name.message}</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs uppercase tracking-[0.2em] text-[var(--page-muted)] mb-2 font-semibold">
-                                            Reason for Booking
-                                        </label>
-                                        <input
-                                            {...register("reason", { required: "Reason is required" })}
-                                            placeholder="Team Sync, Client Call..."
-                                            className="w-full rounded-2xl border border-[var(--border)] bg-white p-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                                        />
-                                        {errors.reason && (
-                                            <p className="text-red-500 text-xs mt-1 ml-1">{errors.reason.message}</p>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs uppercase tracking-[0.2em] text-[var(--page-muted)] mb-2 font-semibold">
-                                            Duration
-                                        </label>
-                                        <select
-                                            {...register("duration", { required: true })}
-                                            className="w-full rounded-2xl border border-[var(--border)] bg-white p-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)] transition-all"
-                                        >
-                                            <option value="60">1 hour</option>
-                                            <option value="120">2 hours</option>
-                                        </select>
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        disabled={booking}
-                                        className="w-full mt-4 rounded-2xl bg-[var(--accent)] px-4 py-3.5 text-sm font-bold text-white transition-all hover:bg-[var(--accent-strong)] hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
-                                    >
-                                        {booking ? "Confirming..." : "Confirm Booking"}
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </main>
         </div>
     );
 }
-
