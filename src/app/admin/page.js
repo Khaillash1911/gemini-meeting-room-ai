@@ -6,22 +6,23 @@ import Link from "next/link";
 import RoomQRCode from "@/components/RoomQRCode";
 import AdminSidebar from "@/components/AdminSidebar";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import GeminiChatBar from "@/components/GeminiChatBar";
 import {
-  Activity,
-  BarChart3,
-  Calendar,
-  CalendarClock,
-  Edit,
-  Info,
-  MapPin,
-  Monitor,
-  Plus,
-  Send,
-  Sparkles,
-  Trash2,
-  Users,
-  Wand2,
-  Plug,
+    Activity,
+    BarChart3,
+    Calendar,
+    CalendarClock,
+    Edit,
+    Info,
+    MapPin,
+    Monitor,
+    Plus,
+    Send,
+    Sparkles,
+    Trash2,
+    Users,
+    Wand2,
+    Plug,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -30,7 +31,6 @@ export default function AdminDashboard() {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [roomToDelete, setRoomToDelete] = useState(null);
     const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
-    const [prompt, setPrompt] = useState("");
 
     useEffect(() => {
         async function fetchRooms() {
@@ -215,38 +215,11 @@ export default function AdminDashboard() {
                             </div>
 
                             <div className="mt-10 flex justify-center">
-                                <div className="w-full max-w-3xl">
-                                    <div className="relative">
-                                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.2),transparent_70%)] blur-xl" />
-                                        <div className="relative flex flex-wrap items-center gap-3 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-lg">
-                                            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface-strong)] text-[var(--accent)]">
-                                                <Sparkles size={18} />
-                                            </span>
-                                            <input
-                                                value={prompt}
-                                                onChange={(event) => setPrompt(event.target.value)}
-                                                placeholder="Ask Gemini to analyze room demand, occupancy, or schedules"
-                                                className="min-w-[220px] flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--page-muted)]"
-                                            />
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center gap-2 rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--accent-strong)]"
-                                            >
-                                                <Send size={14} /> Prompt
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-[var(--page-muted)]">
-                                        {promptSuggestions.map((suggestion) => (
-                                            <span
-                                                key={suggestion}
-                                                className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1"
-                                            >
-                                                {suggestion}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
+                                <GeminiChatBar
+                                    placeholder="Ask Gemini to analyze room demand, occupancy, or schedules"
+                                    suggestions={promptSuggestions}
+                                    onPrompt={(text) => console.log("Admin prompt:", text)}
+                                />
                             </div>
                         </section>
 
@@ -433,67 +406,67 @@ export default function AdminDashboard() {
 
                     </div>
 
-                {/* Delete Modal */}
-                {isDeleteModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-                        <div className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl">
-                            <div className="flex items-center gap-3 text-red-600">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50">
-                                    <Trash2 size={20} />
+                    {/* Delete Modal */}
+                    {isDeleteModalOpen && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+                            <div className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl">
+                                <div className="flex items-center gap-3 text-red-600">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50">
+                                        <Trash2 size={20} />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-[var(--page-text)]">
+                                        Delete room?
+                                    </h3>
                                 </div>
-                                <h3 className="text-xl font-semibold text-[var(--page-text)]">
-                                    Delete room?
-                                </h3>
-                            </div>
 
-                            <p className="mt-4 text-sm text-[var(--page-muted)]">
-                                Are you sure you want to delete{" "}
-                                <span className="font-semibold text-[var(--page-text)]">
-                                    {roomToDelete?.name}
-                                </span>
-                                ?
-                            </p>
+                                <p className="mt-4 text-sm text-[var(--page-muted)]">
+                                    Are you sure you want to delete{" "}
+                                    <span className="font-semibold text-[var(--page-text)]">
+                                        {roomToDelete?.name}
+                                    </span>
+                                    ?
+                                </p>
 
-                            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
-                                Reminder: Room deletion cannot be undone. Bookings remain and
-                                must be handled manually.
-                            </div>
+                                <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-xs text-red-600">
+                                    Reminder: Room deletion cannot be undone. Bookings remain and
+                                    must be handled manually.
+                                </div>
 
-                            <div className="mt-5">
-                                <label className="block text-xs text-[var(--page-muted)]">
-                                    Type{" "}
-                                    <span className="rounded bg-white px-1 font-mono text-[var(--page-text)]">
-                                        delete this room
-                                    </span>{" "}
-                                    to confirm:
-                                </label>
-                                <input
-                                    type="text"
-                                    value={deleteConfirmationText}
-                                    onChange={(event) => setDeleteConfirmationText(event.target.value)}
-                                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)]"
-                                    placeholder="delete this room"
-                                />
-                            </div>
+                                <div className="mt-5">
+                                    <label className="block text-xs text-[var(--page-muted)]">
+                                        Type{" "}
+                                        <span className="rounded bg-white px-1 font-mono text-[var(--page-text)]">
+                                            delete this room
+                                        </span>{" "}
+                                        to confirm:
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={deleteConfirmationText}
+                                        onChange={(event) => setDeleteConfirmationText(event.target.value)}
+                                        className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-white px-3 py-2 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--ring)]"
+                                        placeholder="delete this room"
+                                    />
+                                </div>
 
-                            <div className="mt-6 flex gap-3">
-                                <button
-                                    onClick={() => setIsDeleteModalOpen(false)}
-                                    className="flex-1 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm font-semibold text-[var(--page-text)]"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmDelete}
-                                    disabled={deleteConfirmationText !== "delete this room"}
-                                    className="flex-1 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50"
-                                >
-                                    Delete Room
-                                </button>
+                                <div className="mt-6 flex gap-3">
+                                    <button
+                                        onClick={() => setIsDeleteModalOpen(false)}
+                                        className="flex-1 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm font-semibold text-[var(--page-text)]"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={confirmDelete}
+                                        disabled={deleteConfirmationText !== "delete this room"}
+                                        className="flex-1 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50"
+                                    >
+                                        Delete Room
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
                 </div>
             </main>
         </div>

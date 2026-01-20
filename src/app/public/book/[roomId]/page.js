@@ -111,12 +111,18 @@ export default function BookingPage({ params }) {
 
     // Helper to check if a slot is booked
     const getSlotStatus = (slotTime) => {
-        // Simple overlap check
-        // We need to parse times to compare ranges
-        // But for "is booked", we usually check if there is a booking that COVERS this slot.
-        // A booking at 09:00 for 60 mins covers 09:00 and 09:30.
-
         const slotMinutes = parseInt(slotTime.split(':')[0]) * 60 + parseInt(slotTime.split(':')[1]);
+
+        // Check for past time if today
+        if (selectedDate === today) {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+            // Allow 'current' hour slots. Block only if strict past (start + 60 <= current)
+            // User request: "if 4:00 and untill its 5:00 dont block it"
+            if (slotMinutes + 60 <= currentMinutes) {
+                return { status: 'past', info: null };
+            }
+        }
 
         const bookingForSlot = bookings.find(b => {
             if (b.date !== selectedDate) return false;
@@ -200,7 +206,7 @@ export default function BookingPage({ params }) {
                                         <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm sticky top-6">
                                             <div className="mb-6">
                                                 <p className="text-xs uppercase tracking-[0.25em] text-[var(--page-muted)] font-medium mb-1">Room</p>
-                                                <h1 className="text-3xl font-bold text-[var(--page-text)] tracking-tight">{room.name}</h1>
+                                                <h1 className="text-3xl font-bold text-[var(--page-text)] tracking-tight break-words">{room.name}</h1>
                                             </div>
 
                                             <div className="space-y-4 text-sm text-[var(--page-muted)]">
@@ -304,25 +310,29 @@ export default function BookingPage({ params }) {
                                             {timeSlots.map((time) => {
                                                 const { status, info } = getSlotStatus(time);
                                                 const isBooked = status === 'booked';
+                                                const isPast = status === 'past';
+                                                const isDisabled = isBooked || isPast;
 
                                                 return (
                                                     <button
                                                         key={time}
                                                         onClick={() => handleSlotClick(time)}
-                                                        disabled={isBooked}
+                                                        disabled={isDisabled}
                                                         className={`
                                                             relative group flex flex-col items-start p-4 rounded-2xl border transition-all duration-200 text-left
                                                             ${isBooked
                                                                 ? 'bg-gray-100 border-transparent opacity-60 cursor-not-allowed'
-                                                                : 'bg-[var(--surface-muted)] border-[var(--border)] hover:border-[var(--accent)] hover:shadow-md cursor-pointer active:scale-95'
+                                                                : isPast
+                                                                    ? 'bg-gray-50 border-transparent opacity-40 cursor-not-allowed grayscale'
+                                                                    : 'bg-[var(--surface-muted)] border-[var(--border)] hover:border-[var(--accent)] hover:shadow-md cursor-pointer active:scale-95'
                                                             }
                                                         `}
                                                     >
-                                                        <span className={`text-lg font-bold font-mono mb-1 ${isBooked ? 'text-gray-500' : 'text-[var(--page-text)]'}`}>
+                                                        <span className={`text-lg font-bold font-mono mb-1 ${isDisabled ? 'text-gray-500' : 'text-[var(--page-text)]'}`}>
                                                             {time}
                                                         </span>
                                                         <span className="text-xs font-medium uppercase tracking-wider text-[var(--page-muted)]">
-                                                            {isBooked ? 'Booked' : 'Available'}
+                                                            {isBooked ? 'Booked' : isPast ? 'Past' : 'Available'}
                                                         </span>
 
                                                         {isBooked && info && (
@@ -331,7 +341,7 @@ export default function BookingPage({ params }) {
                                                             </div>
                                                         )}
 
-                                                        {!isBooked && (
+                                                        {!isDisabled && (
                                                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--accent)]">
                                                                 <CheckCircle size={18} />
                                                             </div>

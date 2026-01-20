@@ -107,6 +107,25 @@ export async function getRoomBookings(roomId) {
     }
 }
 
+export async function getAllBookings() {
+    try {
+        const q = query(collection(db, "bookings"), orderBy("date", "asc"));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        // If sorting index is missing, try without sort
+        try {
+            console.warn("Index might be missing, trying without sort");
+            const q = collection(db, "bookings");
+            const querySnapshot = await getDocs(q);
+            return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        } catch (retryError) {
+            console.error("Error getting all bookings: ", retryError);
+            throw retryError;
+        }
+    }
+}
+
 export async function deleteBooking(bookingId) {
     if (!bookingId) {
         console.error("Error: bookingId is undefined or null");

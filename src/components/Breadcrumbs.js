@@ -32,19 +32,19 @@ export default function Breadcrumbs({ dynamicSegments = {} }) {
     // Build the breadcrumb array
     const crumblist = asPathNestedRoutes.map((subpath, idx) => {
       let href = "/" + asPathNestedRoutes.slice(0, idx + 1).join("/");
-      
+
       if (segmentLinkMap[subpath]) {
-          href = segmentLinkMap[subpath];
+        href = segmentLinkMap[subpath];
       }
-      
+
       const isLast = idx === asPathNestedRoutes.length - 1;
-      
+
       // Determine display title
       // 1. Check if there's a dynamic override for this segment (used for IDs)
       // 2. Check the static map
       // 3. Fallback to the segment itself
       let title = dynamicSegments[subpath] || routeNameMap[subpath] || subpath;
-      
+
       // Handle IDs (simple heuristic: if it looks like an ID or is undetermined)
       // Only default to "Details" if we don't have a specific override or map
       if (!dynamicSegments[subpath] && !routeNameMap[subpath] && (subpath.length > 20 || !isNaN(subpath))) {
@@ -68,7 +68,7 @@ export default function Breadcrumbs({ dynamicSegments = {} }) {
 
   return (
     <nav aria-label="Breadcrumb" className="mb-4 flex items-center text-sm">
-      <ol className="flex items-center gap-1">
+      <ol className="flex flex-wrap items-center gap-1">
         {/*
            Instead of linking Home icon to '/', which is the landing page,
            we should link it to the root of the current dashboard context if possible,
