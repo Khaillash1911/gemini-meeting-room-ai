@@ -17,6 +17,7 @@ import {
   MapPin,
   QrCode,
   Search,
+  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -31,6 +32,9 @@ export default function UserDashboard() {
   const [selectedRoomId, setSelectedRoomId] = useState("");
   const [roomLink, setRoomLink] = useState("");
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+  const [geminiResponse, setGeminiResponse] = useState(null);
+  const [isGeminiLoading, setIsGeminiLoading] = useState(false);
+  const [geminiError, setGeminiError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -158,6 +162,71 @@ export default function UserDashboard() {
     alert("Invalid link. Please paste a full room booking URL or ID.");
   };
 
+  const handleGeminiPrompt = async (text) => {
+    setIsGeminiLoading(true);
+    setGeminiResponse(null);
+    setGeminiError(null);
+    try {
+      const res = await fetch("/api/booking/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestText: text,
+          date: new Date().toISOString().split("T")[0], // default to today
+        }),
+      });
+      const data = await res.json();
+      if (data.blocked) {
+        // Show polite error message
+        setGeminiError(data.error === "NO_AVAILABILITY"
+          ? "I couldn't find any available rooms matching your criteria. Please try a different time."
+          : "I couldn't process that request: " + (data.error || "Unknown error"));
+      } else {
+        setGeminiResponse(data.recommendation);
+      }
+    } catch (e) {
+      console.error(e);
+      setGeminiError("Failed to reach the helpful assistant. Please check your connection.");
+    } finally {
+      setIsGeminiLoading(false);
+    }
+  };
+
+  // State for the specific booking action in the chat
+  const [isConfirmingBooking, setIsConfirmingBooking] = useState(false);
+
+  const handleConfirmBooking = async (bookingDetails) => {
+      // Direct booking interaction - no native popup needed as the user explicitly clicked "Confirm & Book"
+      setIsConfirmingBooking(true);
+      
+      try {
+          const res = await fetch("/api/booking/create", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(bookingDetails),
+          });
+          
+          if (res.ok) {
+              setGeminiResponse(null); // Clear suggestion
+              setGeminiError(null);
+              
+              const [roomsData, bookingsData] = await Promise.all([getRooms(), getAllBookings()]);
+              setRooms(roomsData);
+              setBookings(bookingsData);
+
+              setGeminiError("Success! Your booking for " + bookingDetails.roomName + " is confirmed."); 
+          } else {
+              const err = await res.json();
+              setGeminiError("Booking Failed: " + (err.error || "Unknown error"));
+          }
+      } catch (e) {
+          console.error(e);
+          setGeminiError("Failed to create booking. Please try again.");
+      } finally {
+          setIsConfirmingBooking(false);
+      }
+  };
+
   useEffect(() => {
     if (isQRScannerOpen) {
       const scanner = new Html5QrcodeScanner(
@@ -228,7 +297,7 @@ export default function UserDashboard() {
                 </div>
               </div>
 
-              <div className="mt-8 mb-10 flex justify-center">
+              <div className="mt-8 mb-10 flex flex-col items-center gap-6">
                 <GeminiChatBar
                   placeholder="Ask Gemini to find a room..."
                   suggestions={[
@@ -236,8 +305,83 @@ export default function UserDashboard() {
                     "Show me rooms with a whiteboard",
                     "Book a room for 10am tomorrow"
                   ]}
-                  onPrompt={(text) => console.log("User prompt:", text)}
+                  onPrompt={handleGeminiPrompt}
                 />
+                
+                {/* Error Banner */}
+                {geminiError && (
+                    <div className={`mt-4 w-full max-w-2xl rounded-2xl border px-4 py-3 text-sm flex items-center gap-3 shadow-sm animate-fadeIn ${
+                        geminiError.includes("Success") 
+                        ? "border-green-200 bg-green-50 text-green-800"
+                        : "border-red-200 bg-red-50 text-red-800"
+                    }`}>
+                        {geminiError.includes("Success") ? (
+                            <div className="h-2 w-2 rounded-full bg-green-500" />
+                        ) : (
+                            <X size={16} className="text-red-500 cursor-pointer" onClick={() => setGeminiError(null)} />
+                        )}
+                        <span>{geminiError}</span>
+                    </div>
+                )}
+
+                {/* Gemini Response Area */}
+                {(isGeminiLoading || geminiResponse) && !geminiError && (
+                  <div className="mt-6 w-full max-w-2xl mx-auto rounded-3xl border border-[var(--border)] bg-[var(--surface-strong)] p-6 shadow-lg animate-fadeIn">
+                    {isGeminiLoading ? (
+                      <div className="flex items-center gap-3 text-[var(--page-muted)]">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--page-muted)] border-t-transparent" />
+                        <span className="text-sm">Thinking...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                         <div className="flex items-center gap-2 mb-2">
+                             <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                 <Sparkles size={14} />
+                             </div>
+                             <h3 className="font-semibold text-sm">Gemini Suggestion</h3>
+                         </div>
+                         <p className="text-[var(--page-text)] text-sm leading-relaxed">
+                           {geminiResponse.explanation}
+                         </p>
+                         {/* Details Tags */}
+                         {geminiResponse.recommended_duration_mins && (
+                           <div className="mt-3 flex flex-wrap gap-2">
+                             <span className="inline-flex items-center rounded-md bg-[var(--surface-muted)] px-2 py-1 text-xs font-medium text-[var(--page-muted)] ring-1 ring-inset ring-[var(--border)]">
+                               ⏱ {geminiResponse.recommended_duration_mins} mins
+                             </span>
+                             <span className="inline-flex items-center rounded-md bg-[var(--surface-muted)] px-2 py-1 text-xs font-medium text-[var(--page-muted)] ring-1 ring-inset ring-[var(--border)]">
+                               🏷 {geminiResponse.meeting_type}
+                             </span>
+                           </div>
+                         )}
+                         
+                         {/* Actionable Booking Card */}
+                         {geminiResponse.suggestedBooking && (
+                             <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+                                 <h4 className="text-sm font-semibold text-indigo-900">Ready to book?</h4>
+                                 <div className="mt-2 flex items-center justify-between gap-4">
+                                     <div className="text-xs text-indigo-700">
+                                         <p><strong>Room:</strong> {geminiResponse.suggestedBooking.roomName}</p>
+                                         <p><strong>Time:</strong> {geminiResponse.suggestedBooking.time} ({geminiResponse.suggestedBooking.duration} mins)</p>
+                                     </div>
+                                     <button
+                                         onClick={() => handleConfirmBooking(geminiResponse.suggestedBooking)}
+                                         disabled={isConfirmingBooking}
+                                         className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold text-white shadow-sm transition-colors ${
+                                            isConfirmingBooking 
+                                            ? "bg-indigo-400 cursor-wait" 
+                                            : "bg-indigo-600 hover:bg-indigo-700"
+                                         }`}
+                                     >
+                                         {isConfirmingBooking ? "Booking..." : "Confirm & Book"}
+                                     </button>
+                                 </div>
+                             </div>
+                         )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="mt-10 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">

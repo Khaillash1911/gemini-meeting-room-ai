@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getRooms, deleteRoom } from "@/lib/db";
+import { getRooms, deleteRoom, getAllBookings, deleteBooking } from "@/lib/db";
 import Link from "next/link";
 import RoomQRCode from "@/components/RoomQRCode";
 import AdminSidebar from "@/components/AdminSidebar";
@@ -23,28 +23,64 @@ import {
     Users,
     Wand2,
     Plug,
+    X,
+    MessageSquare,
 } from "lucide-react";
 
 export default function AdminDashboard() {
     const [rooms, setRooms] = useState([]);
+    const [bookings, setBookings] = useState([]);
     const [fetching, setFetching] = useState(true);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [roomToDelete, setRoomToDelete] = useState(null);
     const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+    const [bookingToDelete, setBookingToDelete] = useState(null);
+
+    // Gemini Analytics State
+    const [geminiAnalysis, setGeminiAnalysis] = useState(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     useEffect(() => {
-        async function fetchRooms() {
+        async function fetchData() {
             try {
-                const data = await getRooms();
-                setRooms(data);
+                const [roomsData, bookingsData] = await Promise.all([
+                    getRooms(),
+                    getAllBookings()
+                ]);
+                setRooms(roomsData);
+                setBookings(bookingsData);
             } catch (error) {
-                console.error("Failed to fetch rooms", error);
+                console.error("Failed to fetch data", error);
             } finally {
                 setFetching(false);
             }
         }
-        fetchRooms();
+        fetchData();
     }, []);
+
+    const handleGeminiAnalysis = async (text) => {
+        setIsAnalyzing(true);
+        setGeminiAnalysis(null);
+        try {
+            const res = await fetch("/api/admin/analyze", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ requestText: text }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setGeminiAnalysis(data.analysis);
+            } else {
+                console.error("Analysis failed:", data.error);
+                setGeminiAnalysis([{ title: "Error", severity: "warning", content: "Failed to analyze data." }]);
+            }
+        } catch (e) {
+            console.error(e);
+            setGeminiAnalysis([{ title: "Connection Error", severity: "warning", content: "Could not reach Gemini." }]);
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
 
     const initiateDelete = (room) => {
         setRoomToDelete(room);
@@ -63,6 +99,22 @@ export default function AdminDashboard() {
         } catch (error) {
             console.error("Failed to delete room", error);
             alert("Failed to delete room");
+        }
+    };
+
+    const handleDeleteBooking = (booking) => {
+        setBookingToDelete(booking);
+    };
+
+    const confirmDeleteBooking = async () => {
+        if(!bookingToDelete) return;
+        try {
+            await deleteBooking(bookingToDelete.id);
+            setBookings(prev => prev.filter(b => b.id !== bookingToDelete.id));
+            setBookingToDelete(null);
+        } catch(e) {
+            console.error(e);
+            alert("Failed to delete booking");
         }
     };
 
@@ -111,22 +163,25 @@ export default function AdminDashboard() {
             .slice(0, 4);
     }, [rooms]);
 
-    const scheduleRows = useMemo(() => {
-        if (!rooms.length) return [];
-
-        const labels = ["Leadership sync", "Product review", "Client briefing"];
-        const times = ["09:30 - 10:15", "11:00 - 12:00", "14:00 - 15:30"];
-        const days = ["Mon", "Wed", "Fri"];
-
-        return rooms.slice(0, 3).map((room, index) => ({
-            id: room.id,
-            title: labels[index % labels.length],
-            room: room.name,
-            time: times[index % times.length],
-            day: days[index % days.length],
-            status: index % 2 === 0 ? "Draft" : "Published",
-        }));
-    }, [rooms]);
+    // REAL Schedule Data
+    const realScheduleRows = useMemo(() => {
+        // Sort by date/time
+        return [...bookings].sort((a, b) => {
+            const dateA = new Date(`${a.date}T${a.time}`);
+            const dateB = new Date(`${b.date}T${b.time}`);
+            return dateA - dateB;
+        }).map(b => {
+             const room = rooms.find(r => r.id === b.roomId);
+             return {
+                 id: b.id,
+                 title: b.name || "Booking",
+                 room: room ? room.name : "Unknown Room",
+                 time: `${b.time} (${b.duration}m)`,
+                 day: b.date,
+                 status: "Active"
+             };
+        });
+    }, [bookings, rooms]);
 
     const lowestAmenity = amenityStats.reduce((lowest, amenity) => {
         if (!lowest) return amenity;
@@ -214,12 +269,56 @@ export default function AdminDashboard() {
                                 </Link>
                             </div>
 
-                            <div className="mt-10 flex justify-center">
+                            <div className="mt-10 flex flex-col items-center">
                                 <GeminiChatBar
                                     placeholder="Ask Gemini to analyze room demand, occupancy, or schedules"
                                     suggestions={promptSuggestions}
-                                    onPrompt={(text) => console.log("Admin prompt:", text)}
+                                    onPrompt={handleGeminiAnalysis}
                                 />
+                                
+                                {/* Analysis Result Card */}
+                                {(isAnalyzing || geminiAnalysis) && (
+                                    <div className="mt-6 w-full max-w-3xl animate-fadeIn rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-lg">
+                                        {isAnalyzing ? (
+                                             <div className="flex items-center gap-3 text-[var(--page-muted)]">
+                                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--page-muted)] border-t-transparent" />
+                                                <span className="text-sm">Analyzing data...</span>
+                                              </div>
+                                        ) : Array.isArray(geminiAnalysis) ? (
+                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                {geminiAnalysis.map((insight, idx) => (
+                                                    <div key={idx} className={`rounded-2xl border p-4 ${
+                                                        insight.severity === 'warning' ? 'border-orange-200 bg-orange-50/50' : 
+                                                        insight.severity === 'positive' ? 'border-green-200 bg-green-50/50' : 
+                                                        'border-indigo-100 bg-indigo-50/30'
+                                                    }`}>
+                                                        <div className="flex items-start gap-3">
+                                                            <div className={`mt-1 h-2 w-2 rounded-full ${
+                                                                insight.severity === 'warning' ? 'bg-orange-500' : 
+                                                                insight.severity === 'positive' ? 'bg-green-500' : 
+                                                                'bg-indigo-500'
+                                                            }`} />
+                                                            <div>
+                                                                <h4 className={`text-sm font-semibold ${
+                                                                    insight.severity === 'warning' ? 'text-orange-900' : 
+                                                                    insight.severity === 'positive' ? 'text-green-900' : 
+                                                                    'text-indigo-900'
+                                                                }`}>{insight.title}</h4>
+                                                                <p className="mt-1 text-sm text-[var(--page-text)] opacity-80">
+                                                                    {insight.content}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-sm text-red-500">
+                                                Analysis format error. Please try again.
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </section>
 
@@ -350,20 +449,20 @@ export default function AdminDashboard() {
                                 <div className="flex flex-wrap items-center justify-between gap-4">
                                     <div>
                                         <p className="text-xs uppercase tracking-[0.25em] text-[var(--page-muted)]">
-                                            Schedules
+                                            All Bookings
                                         </p>
                                         <h2 className="mt-2 text-2xl font-semibold">
-                                            Edit or delete sessions
+                                            Manage Reservations
                                         </h2>
                                     </div>
                                     <div className="inline-flex items-center gap-2 rounded-full bg-[var(--surface-muted)] px-4 py-2 text-xs text-[var(--page-muted)]">
-                                        <CalendarClock size={14} /> Weekly focus
+                                        <CalendarClock size={14} /> Global View
                                     </div>
                                 </div>
 
                                 <div className="mt-6 space-y-3">
-                                    {scheduleRows.length ? (
-                                        scheduleRows.map((session) => (
+                                    {realScheduleRows.length ? (
+                                        realScheduleRows.map((session) => (
                                             <div
                                                 key={session.id}
                                                 className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4"
@@ -380,15 +479,10 @@ export default function AdminDashboard() {
                                                     </span>
                                                     <button
                                                         type="button"
-                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white text-[var(--page-text)] transition hover:-translate-y-0.5"
-                                                        aria-label="Edit schedule"
-                                                    >
-                                                        <Edit size={16} />
-                                                    </button>
-                                                    <button
-                                                        type="button"
+                                                        onClick={() => handleDeleteBooking(session)}
                                                         className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition hover:-translate-y-0.5"
                                                         aria-label="Delete schedule"
+                                                        title="Override/Delete Booking"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
@@ -397,16 +491,17 @@ export default function AdminDashboard() {
                                         ))
                                     ) : (
                                         <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-muted)] p-6 text-center text-sm text-[var(--page-muted)]">
-                                            Add rooms to generate schedule entries.
+                                            No active bookings found in the system.
                                         </div>
                                     )}
                                 </div>
                             </div>
                         </section>
 
+
                     </div>
 
-                    {/* Delete Modal */}
+                    {/* Delete Room Modal */}
                     {isDeleteModalOpen && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
                             <div className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl">
@@ -462,6 +557,48 @@ export default function AdminDashboard() {
                                         className="flex-1 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition disabled:opacity-50"
                                     >
                                         Delete Room
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delete Booking Modal */}
+                    {bookingToDelete && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+                            <div className="w-full max-w-sm rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-2xl animate-fadeIn">
+                                <div className="flex items-center gap-3 text-red-600">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50">
+                                        <Trash2 size={20} />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-[var(--page-text)]">
+                                        Override Booking?
+                                    </h3>
+                                </div>
+
+                                <p className="mt-4 text-sm text-[var(--page-muted)]">
+                                    You are about to forcefully remove the{" "}
+                                    <span className="font-semibold text-[var(--page-text)]">
+                                        {bookingToDelete.time}
+                                    </span>
+                                    {" "}reservation for{" "}
+                                    <span className="font-semibold text-[var(--page-text)]">
+                                        {bookingToDelete.room}
+                                    </span>.
+                                </p>
+
+                                <div className="mt-6 flex gap-3">
+                                    <button
+                                        onClick={() => setBookingToDelete(null)}
+                                        className="flex-1 rounded-full border border-[var(--border)] bg-[var(--surface-muted)] px-4 py-2 text-sm font-semibold text-[var(--page-text)] hover:bg-[var(--surface-strong)] transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={confirmDeleteBooking}
+                                        className="flex-1 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                                    >
+                                        Confirm Delete
                                     </button>
                                 </div>
                             </div>
